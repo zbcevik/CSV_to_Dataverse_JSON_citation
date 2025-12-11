@@ -9,6 +9,7 @@ Original file is located at
 
 import csv
 import json
+import re
 import pandas as pd
 from datetime import datetime
 
@@ -94,38 +95,13 @@ def csv_to_dataverse_json(csv_file_path, output_json_path):
 
         return current_year
 
+    # Read CSV file and process each row
+    df = pd.read_csv(csv_file_path)
+    all_datasets = []
 
-    # Build complete JSON structure with top-level fields
-    dataset_json = {
-        "id": int(row.get('id', 0)) if row.get('id') else None,
-        "identifier": row.get('identifier', ''),
-        "persistentUrl": row.get('persistentUrl', ''),
-        "protocol": row.get('protocol', 'doi'),
-        "authority": row.get('authority', ''),
-        "publisher": row.get('publisher', ''),
-        "publicationDate": row.get('publicationDate', current_date),
-        "storageIdentifier": row.get('storageIdentifier', ''),
-        "datasetType": row.get('datasetType', 'dataset'),
-        "datasetVersion": {
-            "id": int(row.get('versionId', 0)) if row.get('versionId') else None,
-            "datasetId": int(row.get('datasetId', 0)) if row.get('datasetId') else None,
-            "datasetPersistentId": row.get('datasetPersistentId', ''),
-            "storageIdentifier": row.get('storageIdentifier', ''),
-            "versionNumber": int(row.get('versionNumber', 1)) if row.get('versionNumber') else 1,
-            "versionMinorNumber": int(row.get('versionMinorNumber', 0)) if row.get('versionMinorNumber') else 0,
-            "versionState": row.get('versionState', 'DRAFT'),
-            "latestVersionPublishingState": row.get('latestVersionPublishingState', 'DRAFT'),
-            "UNF": row.get('UNF', ''),
-            "lastUpdateTime": row.get('lastUpdateTime', f"{current_date}T00:00:00Z"),
-            "releaseTime": row.get('releaseTime', ''),
-            "createTime": row.get('createTime', f"{current_date}T00:00:00Z"),
-            "publicationDate": row.get('publicationDate', current_date),
-            "citationDate": row.get('citationDate', current_date),
-            "termsOfUse": row.get('termsOfUse', ''),
-            "citationRequirements": row.get('citationRequirements', ''),
-            "conditions": row.get('conditions', ''),
-            "termsOfAccess": row.get('termsOfAccess', ''),
-            "fileAccessRequest": bool(row.get('fileAccessRequest', False)),
+    for idx, row in df.iterrows():
+        # Build JSON structure focused on citation metadata
+        dataset_json = {
             "metadataBlocks": {
                 "citation": {
                     "displayName": "Citation Metadata",
@@ -134,79 +110,74 @@ def csv_to_dataverse_json(csv_file_path, output_json_path):
                 }
             }
         }
-    }
 
-    # Add optional top-level fields only if they exist
-    optional_top_fields = ['citation']
-    for field in optional_top_fields:
-        if field in row and row[field] and not pd.isna(row[field]):
-            dataset_json[field] = row[field]
+        fields = dataset_json["metadataBlocks"]["citation"]["fields"]
 
-    fields = dataset_json["datasetVersion"]["metadataBlocks"]["citation"]["fields"]
+        # Process each metadata field
+        for field_name, field_config in directory.items():
+            if field_name not in row or pd.isna(row[field_name]) or row[field_name] == "":
+                continue
 
-    # Process each metadata field
-    for field_name, field_config in directory.items():
-        if field_name not in row or pd.isna(row[field_name]) or row[field_name] == "":
-            continue
+            value = str(row[field_name]).strip()
+            if not value:
+                continue
 
-        value = str(row[field_name]).strip()
-        if not value:
-            continue
+            # Build field structure
+            field_entry = {
+                "typeName": field_config["typeName"],
+                "multiple": field_config["multiple"],
+                "typeClass": field_config["typeClass"]
+            }
 
-        # Build field structure
-        field_entry = {
-            "typeName": field_config["typeName"],
-            "multiple": field_config["multiple"],
-            "typeClass": field_config["typeClass"]
-        }
+            # Process based on type
+            if field_config["typeClass"] == "primitive":
+                # Convert date fields to year-only format
+                if field_name in ['productionDate', 'distributionDate', 'dateOfDeposit']:
+                    value = format_date_to_year(value)
+                if field_config["multiple"]:
+                    # Multiple primitive: split by pipe
+                    field_entry["value"] = [v.strip() for v in value.split('|') if v.strip()]
+                else:
+                    # Single primitive
+                    field_entry["value"] = value
 
-        # Process based on type
-        if field_config["typeClass"] == "primitive":
-              # FIXED: Convert date fields to year-only format
-            if field_name in ['productionDate', 'distributionDate', 'dateOfDeposit']:
-                value = format_date_to_year(value)
-            if field_config["multiple"]:
-                # Multiple primitive: split by pipe
+            elif field_config["typeClass"] == "controlledVocabulary":
+                # Controlled vocabulary: split by pipe
                 field_entry["value"] = [v.strip() for v in value.split('|') if v.strip()]
-            else:
-                # Single primitive
-                field_entry["value"] = value
 
-        elif field_config["typeClass"] == "controlledVocabulary":
-            # Controlled vocabulary: split by pipe
-            field_entry["value"] = [v.strip() for v in value.split('|') if v.strip()]
+            elif field_config["typeClass"] == "compound":
+                # Compound: parse with subfields
+                field_entry["value"] = parse_compound(value, field_name, compound_fields)
 
-        elif field_config["typeClass"] == "compound":
-            # Compound: parse with subfields
-            field_entry["value"] = parse_compound(value, field_name, compound_fields)
+            # Add to fields list
+            if field_entry.get("value"):
+                fields.append(field_entry)
 
-        # Add to fields list
-        if field_entry.get("value"):
-            fields.append(field_entry)
+        # Add geospatial metadata block if present
+        if any(col in row for col in ['geographicCoverage', 'geographicUnit', 'geographicBoundingBox']):
+            geo_block = create_geospatial_block(row)
+            if geo_block:
+                dataset_json["metadataBlocks"]["geospatial"] = geo_block
 
-    # Add geospatial metadata block if present (KEEP ALL BLOCKS)
-    if any(col in row for col in ['geographicCoverage', 'geographicUnit', 'geographicBoundingBox']):
-        geo_block = create_geospatial_block(row)
-        if geo_block:
-            dataset_json["datasetVersion"]["metadataBlocks"]["geospatial"] = geo_block
+        # Add social science metadata block if present
+        if any(col in row for col in ['unitOfAnalysis', 'universe', 'timeMethod', 'samplingProcedure']):
+            social_block = create_socialscience_block(row)
+            if social_block:
+                dataset_json["metadataBlocks"]["socialscience"] = social_block
 
-    # Add social science metadata block if present (KEEP ALL BLOCKS)
-    if any(col in row for col in ['unitOfAnalysis', 'universe', 'timeMethod', 'samplingProcedure']):
-        social_block = create_socialscience_block(row)
-        if social_block:
-            dataset_json["datasetVersion"]["metadataBlocks"]["socialscience"] = social_block
+        all_datasets.append(dataset_json)
+        print(f"✓ Row {idx + 1}: Processed {len(fields)} citation fields")
 
-    # Add files array if present (KEEP ALL DATA)
-    if 'files' in row and row['files'] and not pd.isna(row['files']):
-        dataset_json["datasetVersion"]["files"] = json.loads(row['files']) if isinstance(row['files'], str) else row['files']
+    # Write output JSON file
+    # If single row, write as single object; if multiple rows, write as array
+    output_data = all_datasets[0] if len(all_datasets) == 1 else all_datasets
 
-    # Write JSON
     with open(output_json_path, 'w', encoding='utf-8') as f:
-        json.dump(dataset_json, f, indent=2, ensure_ascii=False)
+        json.dump(output_data, f, indent=2, ensure_ascii=False)
 
-    print(f"✓ Successfully converted CSV to JSON: {output_json_path}")
-    print(f"✓ Processed {len(fields)} citation fields")
-    return dataset_json
+    print(f"\n✓ Successfully converted CSV to JSON: {output_json_path}")
+    print(f"✓ Total rows processed: {len(all_datasets)}")
+    return output_data
 
 def parse_compound(value, field_name, compound_fields):
     """
@@ -368,8 +339,9 @@ def create_template_csv(output_path='template.csv'):
 # Main execution
 if __name__ == "__main__":
 
-    # Create template (optional)
-    #create_template_csv('template.csv')
-
     # Convert CSV to JSON
-    csv_to_dataverse_json('/content/sample_data/Csv_to_json - Citation.csv', 'metadata.json')
+    # Update these paths as needed for your workspace
+    csv_input = 'Csv_to_json - Citation.csv'
+    json_output = 'output_metadata.json'
+    
+    csv_to_dataverse_json(csv_input, json_output)
