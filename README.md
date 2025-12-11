@@ -1,6 +1,6 @@
 # CSV to Dataverse JSON Converter
 
-**Simple tool to convert your Excel/CSV file into a format ready for uploading to Dataverse or Borealis data repositories.**
+**Simple tool to convert your CSV file into a format ready for uploading to Dataverse or Borealis data repositories.**
 
 No coding experience needed! Just follow the simple steps below.
 
@@ -33,7 +33,7 @@ No coding experience needed! Just follow the simple steps below.
 ## Quick Start: Step by Step
 
 ### Step 1: Prepare Your CSV File
-Create a CSV (Excel) file with your dataset information. See examples below in the **CSV Format** section.
+Create a CSV file with your dataset information. See examples below in the **CSV Format** section.
 
 ### Step 2: Run One of These Commands
 
