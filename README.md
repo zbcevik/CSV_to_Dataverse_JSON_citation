@@ -1,6 +1,15 @@
 # CSV to Dataverse DDI JSON Converter
 
-Convert CSV metadata files to Dataverse/Borealis-compatible DDI JSON format.
+Convert CSV metadata files to complete Dataverse/Borealis-compatible DDI JSON format with all required system fields, metadata blocks, and dataset information.
+
+## Key Features
+
+✅ **Full Dataverse JSON Structure** - Generates complete JSON with top-level fields, datasetVersion, and all metadata blocks  
+✅ **System Fields** - Automatically generates or accepts dataset IDs, identifiers, persistent URLs  
+✅ **License Information** - Includes CC0 license (customizable)  
+✅ **Multiple Metadata Blocks** - Citation, Geospatial, Social Science support  
+✅ **Flexible Input** - Use defaults or provide custom values via CSV  
+✅ **DDI Compatible** - Ready for upload to Dataverse and Borealis
 
 ## Installation
 
@@ -43,9 +52,48 @@ python csv_to_dataverse_json.py
 
 ## CSV Format
 
+### System Fields (Top-Level - Optional, have defaults)
+
+These fields define the dataset at the system level. If not provided, the script generates sensible defaults:
+
+- `id` - Dataset ID (auto-generated if missing: 1000+row_index)
+- `identifier` - Persistent identifier (auto-generated if missing: FK2/random)
+- `protocol` - Protocol for identifier, typically `doi` or `hdl` (default: `doi`)
+- `authority` - Authority prefix, e.g., `10.70122` (default: `10.70122`)
+- `publisher` - Publisher name (default: `Dataverse`)
+- `publicationDate` - Publication date in YYYY-MM-DD format (default: today)
+- `datasetType` - Type of dataset (default: `dataset`)
+- `versionId` - Version ID (auto-generated if missing: 2000+row_index)
+- `versionNumber` - Version number (default: `1`)
+- `versionMinorNumber` - Minor version (default: `0`)
+- `versionState` - Version state: `DRAFT`, `RELEASED`, etc. (default: `DRAFT`)
+- `latestVersionPublishingState` - Publishing state (default: `DRAFT`)
+- `storageIdentifier` - Storage location (auto-generated if missing)
+- `UNF` - Universal Numeric Fingerprint (optional)
+- `lastUpdateTime` - Last update timestamp (auto-generated)
+- `createTime` - Creation timestamp (auto-generated)
+- `citationDate` - Citation date (default: today)
+- `termsOfUse` - Terms of use text (optional)
+- `citationRequirements` - Citation requirements (optional)
+- `conditions` - Access conditions (optional)
+- `termsOfAccess` - Terms of access (optional)
+- `fileAccessRequest` - Allow file access requests: `true` or `false` (default: `true`)
+
+### License Information (Nested in datasetVersion)
+
+- `licenseName` - License name (default: `CC0 1.0`)
+- `licenseUri` - License URI (default: CC0 URI)
+- `licenseIconUri` - License icon URL (default: CC0 icon)
+- `rightsIdentifier` - Rights identifier (default: `CC0-1.0`)
+- `rightsIdentifierScheme` - Scheme name (default: `SPDX`)
+- `schemeUri` - Scheme URI (default: SPDX URL)
+- `languageCode` - Language code (default: `en`)
+
+### Citation Metadata Fields
+
 Your CSV should have the following column headers for citation metadata:
 
-### Basic Fields
+#### Basic Fields
 - `title` - Dataset title
 - `subtitle` - Dataset subtitle
 - `alternativeTitle` - Alternative title (use `|` for multiple values)
@@ -136,35 +184,91 @@ title,author: authorName; authorAffiliation,subject,keyword: keywordValue; keywo
 
 ## Output JSON Format
 
-The script generates Dataverse-compatible DDI JSON with the following structure:
+The script generates **complete Dataverse-compatible DDI JSON** with all system fields, version information, and metadata blocks:
 
 ```json
 {
-  "metadataBlocks": {
-    "citation": {
-      "displayName": "Citation Metadata",
-      "name": "citation",
-      "fields": [
-        {
-          "typeName": "title",
-          "multiple": false,
-          "typeClass": "primitive",
-          "value": "My Research Dataset"
-        },
-        {
-          "typeName": "author",
-          "multiple": true,
-          "typeClass": "compound",
-          "value": [
-            {
-              "authorName": {...},
-              "authorAffiliation": {...}
-            }
-          ]
-        }
-      ]
-    }
-  }
+  "id": 1000,
+  "identifier": "FK2/DBEC899D",
+  "persistentUrl": "https://doi.org/10.70122/FK2/DBEC899D",
+  "protocol": "doi",
+  "authority": "10.70122",
+  "separator": "/",
+  "publisher": "Dataverse",
+  "publicationDate": "2025-12-11",
+  "storageIdentifier": "s3://10.70122/FK2/DBEC899D",
+  "datasetType": "dataset",
+  "datasetVersion": {
+    "id": 2000,
+    "datasetId": 1000,
+    "datasetPersistentId": "doi:10.70122/FK2/DBEC899D",
+    "datasetType": "dataset",
+    "storageIdentifier": "s3://10.70122:...",
+    "versionNumber": 1,
+    "internalVersionNumber": 1,
+    "versionMinorNumber": 0,
+    "versionState": "DRAFT",
+    "latestVersionPublishingState": "DRAFT",
+    "UNF": "",
+    "lastUpdateTime": "2025-12-11T16:49:19Z",
+    "releaseTime": "",
+    "createTime": "2025-12-11T16:49:19Z",
+    "publicationDate": "2025-12-11",
+    "citationDate": "2025-12-11",
+    "termsOfUse": "",
+    "citationRequirements": "",
+    "conditions": "",
+    "termsOfAccess": "",
+    "license": {
+      "name": "CC0 1.0",
+      "uri": "http://creativecommons.org/publicdomain/zero/1.0",
+      "iconUri": "https://licensebuttons.net/p/zero/1.0/88x31.png",
+      "rightsIdentifier": "CC0-1.0",
+      "rightsIdentifierScheme": "SPDX",
+      "schemeUri": "https://spdx.org/licenses/",
+      "languageCode": "en"
+    },
+    "fileAccessRequest": true,
+    "metadataBlocks": {
+      "citation": {
+        "displayName": "Citation Metadata",
+        "name": "citation",
+        "fields": [
+          {
+            "typeName": "title",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "My Research Dataset"
+          },
+          {
+            "typeName": "author",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {
+                "authorName": {
+                  "typeName": "authorName",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "John Smith"
+                },
+                "authorAffiliation": {
+                  "typeName": "authorAffiliation",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "Harvard University"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "geospatial": {...},
+      "socialscience": {...}
+    },
+    "files": [...]
+  },
+  "citation": "Full citation string (optional)"
 }
 ```
 
