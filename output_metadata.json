@@ -1,92 +1,134 @@
 {
-  "metadataBlocks": {
-    "citation": {
-      "displayName": "Citation Metadata",
-      "name": "citation",
-      "fields": [
-        {
-          "typeName": "title",
-          "multiple": false,
-          "typeClass": "primitive",
-          "value": "Test: csv to json file"
-        },
-        {
-          "typeName": "subtitle",
-          "multiple": false,
-          "typeClass": "primitive",
-          "value": "conversion"
-        },
-        {
-          "typeName": "alternativeTitle",
-          "multiple": true,
-          "typeClass": "primitive",
-          "value": [
-            "alternativeTitle"
-          ]
-        },
-        {
-          "typeName": "subject",
-          "multiple": true,
-          "typeClass": "controlledVocabulary",
-          "value": [
-            "Social Sciences"
-          ]
-        },
-        {
-          "typeName": "notesText",
-          "multiple": false,
-          "typeClass": "primitive",
-          "value": "notest1"
-        },
-        {
-          "typeName": "language",
-          "multiple": true,
-          "typeClass": "controlledVocabulary",
-          "value": [
-            "English"
-          ]
-        },
-        {
-          "typeName": "productionDate",
-          "multiple": false,
-          "typeClass": "primitive",
-          "value": "2025"
-        },
-        {
-          "typeName": "productionPlace",
-          "multiple": true,
-          "typeClass": "primitive",
-          "value": [
-            "Canada"
-          ]
-        },
-        {
-          "typeName": "distributionDate",
-          "multiple": false,
-          "typeClass": "primitive",
-          "value": "2025"
-        },
-        {
-          "typeName": "depositor",
-          "multiple": false,
-          "typeClass": "primitive",
-          "value": "Zeynep Cevik"
-        },
-        {
-          "typeName": "dateOfDeposit",
-          "multiple": false,
-          "typeClass": "primitive",
-          "value": "2025"
-        },
-        {
-          "typeName": "kindOfData",
-          "multiple": true,
-          "typeClass": "primitive",
-          "value": [
-            "micro"
-          ]
-        }
-      ]
+  "id": 1000,
+  "identifier": "FK2/DBEC899D",
+  "persistentUrl": "https://doi.org/10.70122/FK2/DBEC899D",
+  "protocol": "doi",
+  "authority": "10.70122",
+  "separator": "/",
+  "publisher": "Dataverse",
+  "publicationDate": "2025-12-11",
+  "storageIdentifier": "s3://10.70122/FK2/DBEC899D",
+  "datasetType": "dataset",
+  "datasetVersion": {
+    "id": 2000,
+    "datasetId": 1000,
+    "datasetPersistentId": "doi:10.70122/FK2/DBEC899D",
+    "datasetType": "dataset",
+    "storageIdentifier": "s3://10.70122:13e5625a15ad-f74ad67d087e",
+    "versionNumber": 1,
+    "internalVersionNumber": 1,
+    "versionMinorNumber": 0,
+    "versionState": "DRAFT",
+    "latestVersionPublishingState": "DRAFT",
+    "UNF": "",
+    "lastUpdateTime": "2025-12-11T16:49:19Z",
+    "releaseTime": "",
+    "createTime": "2025-12-11T16:49:19Z",
+    "publicationDate": "2025-12-11",
+    "citationDate": "2025-12-11",
+    "termsOfUse": "",
+    "citationRequirements": "",
+    "conditions": "",
+    "termsOfAccess": "",
+    "license": {
+      "name": "CC0 1.0",
+      "uri": "http://creativecommons.org/publicdomain/zero/1.0",
+      "iconUri": "https://licensebuttons.net/p/zero/1.0/88x31.png",
+      "rightsIdentifier": "CC0-1.0",
+      "rightsIdentifierScheme": "SPDX",
+      "schemeUri": "https://spdx.org/licenses/",
+      "languageCode": "en"
+    },
+    "fileAccessRequest": true,
+    "metadataBlocks": {
+      "citation": {
+        "displayName": "Citation Metadata",
+        "name": "citation",
+        "fields": [
+          {
+            "typeName": "title",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "Test: csv to json file"
+          },
+          {
+            "typeName": "subtitle",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "conversion"
+          },
+          {
+            "typeName": "alternativeTitle",
+            "multiple": true,
+            "typeClass": "primitive",
+            "value": [
+              "alternativeTitle"
+            ]
+          },
+          {
+            "typeName": "subject",
+            "multiple": true,
+            "typeClass": "controlledVocabulary",
+            "value": [
+              "Social Sciences"
+            ]
+          },
+          {
+            "typeName": "notesText",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "notest1"
+          },
+          {
+            "typeName": "language",
+            "multiple": true,
+            "typeClass": "controlledVocabulary",
+            "value": [
+              "English"
+            ]
+          },
+          {
+            "typeName": "productionDate",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "2025"
+          },
+          {
+            "typeName": "productionPlace",
+            "multiple": true,
+            "typeClass": "primitive",
+            "value": [
+              "Canada"
+            ]
+          },
+          {
+            "typeName": "distributionDate",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "2025"
+          },
+          {
+            "typeName": "depositor",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "Zeynep Cevik"
+          },
+          {
+            "typeName": "dateOfDeposit",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "2025"
+          },
+          {
+            "typeName": "kindOfData",
+            "multiple": true,
+            "typeClass": "primitive",
+            "value": [
+              "micro"
+            ]
+          }
+        ]
+      }
     }
   }
 }
