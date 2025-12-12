@@ -418,6 +418,25 @@ def csv_to_dataverse_json(csv_file_path, output_json_path, defaults=None):
 
     # Read CSV file and process each row
     df = pd.read_csv(csv_file_path)
+
+    # Parse column headers to handle "field: subfield1; subfield2" format
+    column_mapping = {}  # Maps actual column name to (base_field_name, custom_subfields)
+    for col in df.columns:
+        if ': ' in col:
+            # Extract base field name and custom subfields
+            base_field, subfields_str = col.split(': ', 1)
+            base_field = base_field.strip()
+            custom_subfields = [s.strip() for s in subfields_str.split(';') if s.strip()]
+            column_mapping[col] = (base_field, custom_subfields)
+        else:
+            column_mapping[col] = (col.strip(), None)
+
+    # Create a temporary compound_fields_override for this CSV
+    compound_fields_override = compound_fields.copy()
+    for col, (base_field, custom_subfields) in column_mapping.items():
+        if custom_subfields and base_field in directory:
+            compound_fields_override[base_field] = custom_subfields
+
     all_datasets = []
 
     for idx, row in df.iterrows():
@@ -653,18 +672,24 @@ def csv_to_dataverse_json(csv_file_path, output_json_path, defaults=None):
 
         fields = dataset_json["datasetVersion"]["metadataBlocks"]["citation"]["fields"]
 
-        # Process each metadata field
-        for field_name, field_config in directory.items():
-            if (
-                field_name not in row
-                or pd.isna(row[field_name])
-                or row[field_name] == ""
-            ):
+        # Process each CSV column
+        for col in df.columns:
+            # Get the base field name and whether it has custom subfields
+            base_field, custom_subfields = column_mapping.get(col, (col, None))
+
+            # Check if this field is in our directory
+            if base_field not in directory:
                 continue
 
-            value = str(row[field_name]).strip()
+            # Check if row has a value for this column
+            if col not in row or pd.isna(row[col]) or row[col] == "":
+                continue
+
+            value = str(row[col]).strip()
             if not value:
                 continue
+
+            field_config = directory[base_field]
 
             # Build field structure
             field_entry = {
@@ -676,7 +701,7 @@ def csv_to_dataverse_json(csv_file_path, output_json_path, defaults=None):
             # Process based on type
             if field_config["typeClass"] == "primitive":
                 # Convert date fields to year-only format
-                if field_name in [
+                if base_field in [
                     "productionDate",
                     "distributionDate",
                     "dateOfDeposit",
@@ -698,9 +723,9 @@ def csv_to_dataverse_json(csv_file_path, output_json_path, defaults=None):
                 ]
 
             elif field_config["typeClass"] == "compound":
-                # Compound: parse with subfields
+                # Compound: parse with subfields (use override if custom subfields specified)
                 field_entry["value"] = parse_compound(
-                    value, field_name, compound_fields
+                    value, base_field, compound_fields_override
                 )
 
             # Add to fields list
