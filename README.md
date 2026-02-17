@@ -20,7 +20,7 @@ No coding experience needed! Just follow the simple steps below.
 1. Open your terminal/command prompt
 2. Go to the folder with this tool:
    ```bash
-   cd /workspaces/CSV_to_Dataverse_JSON
+   cd /workspaces/CSV_to_Dataverse_JSON_citation
    ```
 
 3. Install the required software:
